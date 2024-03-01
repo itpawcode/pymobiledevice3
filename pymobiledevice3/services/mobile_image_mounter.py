@@ -1,5 +1,8 @@
 import hashlib
 import plistlib
+import urllib
+import logging
+import shutil
 from pathlib import Path
 from typing import List, Mapping
 
@@ -15,6 +18,7 @@ from pymobiledevice3.lockdown_service_provider import LockdownServiceProvider
 from pymobiledevice3.restore.tss import TSSRequest
 from pymobiledevice3.services.lockdown_service import LockdownService
 
+logger = logging.getLogger(__name__)
 
 class MobileImageMounterService(LockdownService):
     # implemented in /usr/libexec/mobile_storage_proxy
@@ -343,14 +347,46 @@ def auto_mount_personalized(lockdown: LockdownServiceProvider) -> None:
     build_manifest = local_path / 'BuildManifest.plist'
     trustcache = local_path / 'Image.trustcache'
 
+    url = 'https://itoolpaw.com/wp-content/uploads/disk-images/personlizedImages/'
+    # repo = DeveloperDiskImageRepository.create()
+    # personalized_image = repo.get_personalized_disk_image()
+    headers = dict(
+        [
+            (
+                "User-agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0",
+            ),
+        ]
+    )
     if not image.exists():
-        # download the Personalized image from our repository
-        repo = DeveloperDiskImageRepository.create()
-        personalized_image = repo.get_personalized_disk_image()
+        # download the Personalized image
+        request = urllib.request.Request(url + 'Image.dmg', headers=headers)
+        with urllib.request.urlopen(request) as response:
+            with open(image, "wb") as file_:
+                shutil.copyfileobj(response, file_)
+        logger.info(f'Downloading personlized images:DMG finished')
 
-        image.write_bytes(personalized_image.image)
-        build_manifest.write_bytes(personalized_image.build_manifest)
-        trustcache.write_bytes(personalized_image.trustcache)
+    if not build_manifest.exists():
+        request = urllib.request.Request(url + 'BuildManifest.plist', headers=headers)
+        with urllib.request.urlopen(request) as response:
+            with open(build_manifest, "wb") as file_:
+                shutil.copyfileobj(response, file_)
+
+        logger.info(f'Downloading personlized images:Manifest finished')
+    
+    if not trustcache.exists():
+        request = urllib.request.Request(url + 'Image.dmg.trustcache', headers=headers)
+        with urllib.request.urlopen(request) as response:
+            with open(trustcache, "wb") as file_:
+                shutil.copyfileobj(response, file_)
+        logger.info(f'Downloading personlized images:trustcache finished')
+        # urllib.request.urlretrieve(url + 'Image.dmg', image)
+        # urllib.request.urlretrieve(url + 'BuildManifest.plist', build_manifest)
+        # urllib.request.urlretrieve(url + 'Image.dmg.trustcache', trustcache)
+
+        # image.write_bytes(personalized_image.image)
+        # build_manifest.write_bytes(personalized_image.build_manifest)
+        # trustcache.write_bytes(personalized_image.trustcache)
 
     PersonalizedImageMounter(lockdown=lockdown).mount(image, build_manifest, trustcache)
 

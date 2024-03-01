@@ -1,7 +1,7 @@
 import logging
 from functools import update_wrapper
 from pathlib import Path
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 
 import click
 
@@ -119,8 +119,10 @@ def mounter_auto_mount(service_provider: LockdownServiceProvider, xcode: str, ve
     try:
         auto_mount(service_provider, xcode=xcode, version=version)
         logger.info('DeveloperDiskImage mounted successfully')
-    except URLError:
-        logger.warning('failed to query DeveloperDiskImage versions')
+    except HTTPError as e:
+        logger.warning(f'failed to auto_mount: {e.url} => {e}')
+    except URLError as e:
+        logger.warning(f'failed to query DeveloperDiskImage versions: {e}')
     except DeveloperDiskImageNotFoundError:
         logger.error('Unable to find the correct DeveloperDiskImage')
     except AlreadyMountedError:

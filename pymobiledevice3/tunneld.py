@@ -123,7 +123,7 @@ class TunneldCore:
             async with start_tunnel(rsd, protocol=self.protocol) as tun:
                 rsd.close()
                 self.tunnel_tasks[ip].tunnel = tun
-                logger.info(f'Created tunnel --rsd {tun.address} {tun.port}')
+                logger.info(f'Created tunnel UDID: {rsd.udid} --rsd {tun.address} {tun.port}')
                 await tun.client.wait_closed()
 
         except asyncio.CancelledError:

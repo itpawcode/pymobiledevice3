@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from asyncio import CancelledError, StreamReader, StreamWriter
 from collections import namedtuple
 from contextlib import asynccontextmanager, suppress
+import traceback
 
 if sys.platform != 'win32':
     from os import chown
@@ -185,7 +186,11 @@ class RemotePairingTunnel(ABC):
         with suppress(CancelledError):
             await self._tun_read_task
         if sys.platform != 'darwin':
-            self.tun.down()
+            try:
+                self.tun.down()
+            except Exception as e:
+                self._logger.error(traceback.format_exc())
+
         self.tun = None
 
     @staticmethod

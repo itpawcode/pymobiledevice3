@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from ifaddr import get_adapters
 from packaging.version import Version
 
-from pymobiledevice3.remote.bonjour import query_bonjour
+from pymobiledevice3.remote.bonjour import query_bonjour, DEFAULT_BONJOUR_TIMEOUT
 from pymobiledevice3.remote.common import TunnelProtocol
 from pymobiledevice3.remote.core_device_tunnel_service import TunnelResult
 from pymobiledevice3.remote.module_imports import start_tunnel
@@ -51,32 +51,36 @@ class TunneldCore:
     async def monitor_adapters(self):
         previous_ips = []
         while True:
-            if sys.platform == 'win32':
-                current_ips = [f'{adapter.ips[0].ip[0]}%{adapter.ips[0].ip[2]}' for adapter in get_adapters() if
-                               adapter.ips[0].is_IPv6]
-            else:
-                current_ips = [f'{adapter.ips[0].ip[0]}%{adapter.nice_name}' for adapter in get_adapters() if
-                               adapter.ips[0].is_IPv6]
+            try:
+                if sys.platform == 'win32':
+                    current_ips = [f'{adapter.ips[0].ip[0]}%{adapter.ips[0].ip[2]}' for adapter in get_adapters() if
+                                adapter.ips[0].is_IPv6]
+                else:
+                    current_ips = [f'{adapter.ips[0].ip[0]}%{adapter.nice_name}' for adapter in get_adapters() if
+                                adapter.ips[0].is_IPv6]
 
-            added = [ip for ip in current_ips if ip not in previous_ips]
-            removed = [ip for ip in previous_ips if ip not in current_ips]
+                added = [ip for ip in current_ips if ip not in previous_ips]
+                removed = [ip for ip in previous_ips if ip not in current_ips]
 
-            previous_ips = current_ips
+                previous_ips = current_ips
 
-            logger.debug(f'added interfaces: {added}')
-            logger.debug(f'removed interfaces: {removed}')
+                logger.debug(f'added interfaces: {added}')
+                logger.debug(f'removed interfaces: {removed}')
 
-            for ip in removed:
-                if ip in self.tunnel_tasks:
-                    self.tunnel_tasks[ip].task.cancel()
-                    await self.tunnel_tasks[ip].task
+                for ip in removed:
+                    if ip in self.tunnel_tasks:
+                        self.tunnel_tasks[ip].task.cancel()
+                        await self.tunnel_tasks[ip].task
 
-            for ip in added:
-                self.tunnel_tasks[ip] = TunnelTask(
-                    task=asyncio.create_task(self.handle_new_ip(ip), name='handle_new_address'))
+                for ip in added:
+                    self.tunnel_tasks[ip] = TunnelTask(
+                        task=asyncio.create_task(self.handle_new_ip(ip), name='handle_new_address'))
 
-            # wait before re-iterating
-            await asyncio.sleep(1)
+                # wait before re-iterating
+                await asyncio.sleep(1)
+            except Exception:
+                logger.error(traceback.format_exc())
+            
 
     @asyncio_print_traceback
     async def handle_new_ip(self, ip: str):
@@ -89,7 +93,7 @@ class TunneldCore:
                 query = query_bonjour(ip)
 
                 # validate a CoreDevice was indeed found
-                await asyncio.sleep(1)
+                await asyncio.sleep(DEFAULT_BONJOUR_TIMEOUT)
 
                 # close zerconf
                 query.service_browser.cancel()
@@ -102,6 +106,7 @@ class TunneldCore:
                 await asyncio.sleep(REATTEMPT_INTERVAL)
 
             if not addresses:
+                logger.debug(f'CancelledError==No addresses found for: {ip}')
                 raise asyncio.CancelledError()
 
             peer_address = addresses[0]

@@ -3,12 +3,15 @@ import sys
 import time
 from socket import AF_INET6, inet_ntop
 from typing import List
+import logging
+import traceback
 
 from ifaddr import get_adapters
 from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
 from zeroconf.const import _TYPE_AAAA
 
 DEFAULT_BONJOUR_TIMEOUT = 1 if sys.platform != 'win32' else 2  # On Windows, it takes longer to get the addresses
+logger = logging.getLogger(__name__)
 
 
 class RemotedListener(ServiceListener):
@@ -40,10 +43,17 @@ class BonjourQuery:
 
 
 def query_bonjour(ip: str) -> BonjourQuery:
-    zc = Zeroconf(interfaces=[ip.split('%')[0]])
-    listener = RemotedListener(ip)
-    service_browser = ServiceBrowser(zc, '_remoted._tcp.local.', listener)
-    return BonjourQuery(zc, service_browser, listener)
+    try:
+        zc = Zeroconf(interfaces=[ip.split('%')[0]])
+        listener = RemotedListener(ip)
+        service_browser = ServiceBrowser(zc, '_remoted._tcp.local.', listener)
+        a = BonjourQuery(zc, service_browser, listener)
+    except Exception as e:
+        logger.error(f'query_bonjour Exception: ')
+        logger.error(traceback.format_exc())
+    finally:
+        logger.debug(f'query_bonjour finnally')
+    return a
 
 
 def get_remoted_addresses(timeout: float = DEFAULT_BONJOUR_TIMEOUT) -> List[str]:

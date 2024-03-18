@@ -106,7 +106,6 @@ class TunneldCore:
                 await asyncio.sleep(REATTEMPT_INTERVAL)
 
             if not addresses:
-                logger.debug(f'CancelledError==No addresses found for: {ip}')
                 raise asyncio.CancelledError()
 
             peer_address = addresses[0]
@@ -125,6 +124,7 @@ class TunneldCore:
 
             # populate the udid from the untrusted RSD information
             self.tunnel_tasks[ip].udid = rsd.udid
+            logger.info(f'RSD connected UDID: {rsd.udid}')
 
             # establish a trusted tunnel
             async with start_tunnel(rsd, protocol=self.protocol) as tun:

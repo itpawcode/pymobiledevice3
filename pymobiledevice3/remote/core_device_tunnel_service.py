@@ -187,10 +187,12 @@ class RemotePairingTunnel(ABC):
             await self._tun_read_task
         if sys.platform != 'darwin':
             try:
-                self.tun.down()
+                self._logger.debug('stopping tunnel tun.close START')
+                self.tun.close()
             except Exception as e:
+                self._logger.error('tun close Exception:')
                 self._logger.error(traceback.format_exc())
-
+            self._logger.debug('stopping tunnel tun.close FINISHED')
         self.tun = None
 
     @staticmethod
@@ -464,7 +466,7 @@ class CoreDeviceTunnelService(RemoteService):
                                  'kind': 'setupManualPairing',
                                  'sendingHost': platform.node(),
                                  'startNewSession': True})
-        self.logger.info('Waiting user pairing consent')
+        self.logger.info(f'Waiting user pairing consent:{self.rsd.udid}')
         response = self._receive_plain_response()['event']['_0']
         if 'awaitingUserConsent' in response:
             pairingData = self._receive_pairing_data()

@@ -6,9 +6,9 @@ datas += copy_metadata('pyimg4')
 
 
 a = Analysis(
-    ['pymobiledevice3\\__main__.py'],
+    ['pymobiledevice3/__main__.py'],
     pathex=[],
-    binaries=[('D:\\pymobiledevice3\\pymobiledevice3\\resources\\webinspector', 'pymobiledevice3\\resources\\webinspector')],
+    binaries=[('/Users/yzx/出海工具/pymobiledevice3/pymobiledevice3/resources/webinspector', 'pymobiledevice3/resources/webinspector')],
     datas=datas,
     hiddenimports=['pymobiledevice3.cli'],
     hookspath=['.'],
@@ -22,20 +22,26 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='mobdevice',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch=None,
+    target_arch='x86_64',
     codesign_identity=None,
     entitlements_file=None,
+)
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='mobdevice',
 )

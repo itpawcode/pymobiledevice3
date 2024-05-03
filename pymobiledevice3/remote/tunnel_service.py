@@ -14,7 +14,6 @@ from abc import ABC, abstractmethod
 from asyncio import CancelledError, StreamReader, StreamWriter
 from collections import namedtuple
 from contextlib import asynccontextmanager, suppress
-import traceback
 
 if sys.platform != 'win32':
     from os import chown
@@ -186,13 +185,7 @@ class RemotePairingTunnel(ABC):
         with suppress(CancelledError):
             await self._tun_read_task
         if sys.platform != 'darwin':
-            try:
-                self._logger.debug('stopping tunnel tun.close START')
-                self.tun.close()
-            except Exception as e:
-                self._logger.error('tun close Exception:')
-                self._logger.error(traceback.format_exc())
-            self._logger.debug('stopping tunnel tun.close FINISHED')
+            self.tun.down()
         self.tun = None
 
     @staticmethod
@@ -466,7 +459,7 @@ class CoreDeviceTunnelService(RemoteService):
                                  'kind': 'setupManualPairing',
                                  'sendingHost': platform.node(),
                                  'startNewSession': True})
-        self.logger.info(f'Waiting user pairing consent:{self.rsd.udid}')
+        self.logger.info('Waiting user pairing consent')
         response = self._receive_plain_response()['event']['_0']
         if 'awaitingUserConsent' in response:
             pairingData = self._receive_pairing_data()

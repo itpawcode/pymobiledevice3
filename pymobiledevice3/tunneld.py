@@ -103,9 +103,8 @@ class TunneldCore:
                     task=asyncio.create_task(self.handle_new_potential_usb_cdc_ncm_interface_task(ip),
                                              name=f'handle-new-potential-usb-cdc-ncm-interface-task-{ip}'))
 
-                # wait before re-iterating
-                await asyncio.sleep(1)
-            
+            # wait before re-iterating
+            await asyncio.sleep(1)
 
     @asyncio_print_traceback
     async def monitor_wifi_task(self) -> None:

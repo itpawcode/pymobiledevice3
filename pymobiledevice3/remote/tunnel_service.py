@@ -503,7 +503,7 @@ class RemotePairingProtocol(StartTcpTunnel):
                                        'kind': 'setupManualPairing',
                                        'sendingHost': platform.node(),
                                        'startNewSession': True})
-        self.logger.info('Waiting user pairing consent')
+        self.logger.info(f'Waiting user pairing consent:{self.remote_identifier}')
         response = await self._receive_plain_response()
         response = response['event']['_0']
 

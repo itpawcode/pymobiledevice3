@@ -201,7 +201,7 @@ class TunneldCore:
                         queue.put_nowait(tun)
                         # avoid sending another message if succeeded
                         queue = None
-                    logger.info(f'[{asyncio.current_task().get_name()}] Created tunnel --rsd {tun.address} {tun.port}')
+                    logger.info(f'[{asyncio.current_task().get_name()}] Created tunnel UDID: {protocol_handler.remote_identifier} --rsd {tun.address} {tun.port}')
                     await tun.client.wait_closed()
                 else:
                     bailed_out = True
@@ -278,6 +278,7 @@ class TunneldCore:
         finally:
             if rsd is not None:
                 try:
+                    logger.info(f'disconnected from tunnel udid {rsd.udid}')
                     await rsd.close()
                 except OSError:
                     pass

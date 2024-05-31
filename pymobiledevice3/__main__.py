@@ -126,9 +126,15 @@ def main() -> None:
     except DeveloperModeIsNotEnabledError:
         logger.error('Developer Mode is disabled. You can try to enable it using: '
                      'python3 -m pymobiledevice3 amfi enable-developer-mode')
-    except InvalidServiceError as e:
-        logger.warning('Trying again over tunneld since it is a developer command')
-        if (e.identifier is not None) and ('developer' in sys.argv) and ('--tunnel' not in sys.argv):
+    except (InvalidServiceError, RSDRequiredError) as e:
+        should_retry_over_tunneld = False
+        if isinstance(e, RSDRequiredError):
+            logger.warning('Trying again over tunneld since RSD is required for this command')
+            should_retry_over_tunneld = True
+        elif (e.identifier is not None) and ('developer' in sys.argv) and ('--tunnel' not in sys.argv):
+            logger.warning('Trying again over tunneld since it is a developer command')
+            should_retry_over_tunneld = True
+        if should_retry_over_tunneld:
             sys.argv += ['--tunnel', e.identifier]
             return main()
         logger.error(INVALID_SERVICE_MESSAGE)
@@ -148,10 +154,6 @@ def main() -> None:
         logger.error(f'Device not found: {e.udid}')
     except NotEnoughDiskSpaceError:
         logger.error('Not enough disk space')
-    except RSDRequiredError:
-        logger.error('The requested operation requires an RSD instance. For more information see:\n'
-                     'https://github.com/doronz88/pymobiledevice3?tab=readme-ov-file#working-with-developer-tools-ios'
-                     '--170')
     except DeprecationError:
         logger.error('failed to query MobileGestalt, MobileGestalt deprecated (iOS >= 17.4).')
     except OSNotSupportedError as e:

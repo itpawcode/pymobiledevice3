@@ -278,7 +278,6 @@ class TunneldCore:
         finally:
             if rsd is not None:
                 try:
-                    logger.info(f'disconnected from tunnel udid {rsd.udid}')
                     await rsd.close()
                 except OSError:
                     pass

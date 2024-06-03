@@ -4,6 +4,7 @@ from PyInstaller.utils.hooks import copy_metadata
 
 datas = []
 datas += collect_data_files('pytun_pmd3')
+datas += copy_metadata('readchar')
 datas += copy_metadata('pyimg4')
 
 
@@ -12,7 +13,7 @@ a = Analysis(
     pathex=[],
     binaries=[('D:\\pymobiledevice3\\pymobiledevice3\\resources\\webinspector', 'pymobiledevice3\\resources\\webinspector')],
     datas=datas,
-    hiddenimports=['pymobiledevice3.cli'],
+    hiddenimports=['pymobiledevice3.cli', 'readchar'],
     hookspath=['.'],
     hooksconfig={},
     runtime_hooks=[],

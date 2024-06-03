@@ -259,3 +259,19 @@ async def cli_service_task(service_provider: RemoteServiceDiscoveryService, serv
 def cli_service(service_provider: RemoteServiceDiscoveryService, service_name: str) -> None:
     """ start an ipython shell for interacting with given service """
     asyncio.run(cli_service_task(service_provider, service_name), debug=True)
+
+@remote_cli.command('install-wetest-drivers', cls=BaseCommand)
+@sudo_required
+def cli_install_wetest_drivers() -> None:
+    """ install WeTests drivers (windows-only) """
+    import pywintunx_pmd3
+    pywintunx_pmd3.install_wetest_driver()
+
+
+@remote_cli.command('uninstall-wetest-drivers', cls=BaseCommand)
+@sudo_required
+def cli_uninstall_wetest_drivers() -> None:
+    """ uninstall WeTests drivers (windows-only) """
+    import pywintunx_pmd3
+    pywintunx_pmd3.uninstall_wetest_driver()
+    pywintunx_pmd3.delete_driver()

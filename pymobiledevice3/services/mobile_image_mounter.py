@@ -18,6 +18,8 @@ from pymobiledevice3.lockdown_service_provider import LockdownServiceProvider
 from pymobiledevice3.restore.tss import TSSRequest
 from pymobiledevice3.services.lockdown_service import LockdownService
 
+import ssl
+
 logger = logging.getLogger(__name__)
 
 class MobileImageMounterService(LockdownService):
@@ -358,17 +360,19 @@ def auto_mount_personalized(lockdown: LockdownServiceProvider) -> None:
             ),
         ]
     )
+    # 在某些用户MAC系统上出现ssl错误(unable to get local issuer certificate)
+    noSslContext = ssl._create_unverified_context()
     if not image.exists():
         # download the Personalized image
         request = urllib.request.Request(url + 'Image.dmg', headers=headers)
-        with urllib.request.urlopen(request) as response:
+        with urllib.request.urlopen(request, context=noSslContext) as response:
             with open(image, "wb") as file_:
                 shutil.copyfileobj(response, file_)
         logger.info(f'Downloading personlized images:DMG finished')
 
     if not build_manifest.exists():
         request = urllib.request.Request(url + 'BuildManifest.plist', headers=headers)
-        with urllib.request.urlopen(request) as response:
+        with urllib.request.urlopen(request, context=noSslContext) as response:
             with open(build_manifest, "wb") as file_:
                 shutil.copyfileobj(response, file_)
 
@@ -376,7 +380,7 @@ def auto_mount_personalized(lockdown: LockdownServiceProvider) -> None:
     
     if not trustcache.exists():
         request = urllib.request.Request(url + 'Image.dmg.trustcache', headers=headers)
-        with urllib.request.urlopen(request) as response:
+        with urllib.request.urlopen(request, context=noSslContext) as response:
             with open(trustcache, "wb") as file_:
                 shutil.copyfileobj(response, file_)
         logger.info(f'Downloading personlized images:trustcache finished')

@@ -589,7 +589,7 @@ class LockdownClient(ABC, LockdownServiceProvider):
             if timeout == 0:
                 raise
 
-        self.logger.info('waiting user pairing dialog...')
+        self.logger.info(f'waiting user pairing dialog:{self.identifier}')
         start = time.time()
         while timeout is None or time.time() <= start + timeout:
             with suppress(PairingDialogResponsePendingError):
